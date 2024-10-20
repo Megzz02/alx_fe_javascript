@@ -107,8 +107,9 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
     localStorage.setItem("selectedCategory", selectedCategory);
   }
   
-  function syncWithServer() {
-    fetchQuotesFromServer().then(serverQuotes => {
+  async function syncWithServer() {
+    try {
+      const serverQuotes = await fetchQuotesFromServer();
       // Simulate server data taking precedence in case of conflict
       const mergedQuotes = [...serverQuotes, ...quotes];
       const uniqueMergedQuotes = Array.from(new Set(mergedQuotes.map(q => q.text)))
@@ -118,17 +119,20 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
       saveQuotes();
       populateCategories();
       alert("Data synced with server successfully!");
-    }).catch(error => console.error("Error syncing with server: ", error));
+    } catch (error) {
+      console.error("Error syncing with server: ", error);
+    }
   }
   
-  function fetchQuotesFromServer() {
-    return fetch(SERVER_URL)
-      .then(response => response.json())
-      .then(data => data.map(item => ({ text: item.title, category: "Server" })))
-      .catch(error => {
-        console.error("Error fetching quotes from server: ", error);
-        return [];
-      });
+  async function fetchQuotesFromServer() {
+    try {
+      const response = await fetch(SERVER_URL);
+      const data = await response.json();
+      return data.map(item => ({ text: item.title, category: "Server" }));
+    } catch (error) {
+      console.error("Error fetching quotes from server: ", error);
+      return [];
+    }
   }
   
   function notifyUser(message) {
@@ -141,14 +145,14 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
     }, 3000);
   }
   
-  window.addEventListener("load", () => {
+  window.addEventListener("load", async () => {
     populateCategories();
     const savedCategory = localStorage.getItem("selectedCategory");
     if (savedCategory) {
       document.getElementById("categoryFilter").value = savedCategory;
       filterQuotes();
     }
-    syncWithServer();
+    await syncWithServer();
   });
   
   createAddQuoteForm();
