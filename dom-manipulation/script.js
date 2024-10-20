@@ -20,9 +20,10 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
     const newQuoteCategory = document.getElementById("newQuoteCategory").value;
   
     if (newQuoteText && newQuoteCategory) {
-      quotes.push({ text: newQuoteText, category: newQuoteCategory });
+      const newQuote = { text: newQuoteText, category: newQuoteCategory };
+      quotes.push(newQuote);
       saveQuotes();
-      syncWithServer();
+      syncWithServer(newQuote);
       document.getElementById("newQuoteText").value = "";
       document.getElementById("newQuoteCategory").value = "";
       alert("New quote added successfully!");
@@ -107,8 +108,11 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
     localStorage.setItem("selectedCategory", selectedCategory);
   }
   
-  async function syncWithServer() {
+  async function syncWithServer(newQuote = null) {
     try {
+      if (newQuote) {
+        await postQuoteToServer(newQuote);
+      }
       const serverQuotes = await fetchQuotesFromServer();
       // Simulate server data taking precedence in case of conflict
       const mergedQuotes = [...serverQuotes, ...quotes];
@@ -132,6 +136,20 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
     } catch (error) {
       console.error("Error fetching quotes from server: ", error);
       return [];
+    }
+  }
+  
+  async function postQuoteToServer(quote) {
+    try {
+      await fetch(SERVER_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(quote)
+      });
+    } catch (error) {
+      console.error("Error posting quote to server: ", error);
     }
   }
   
