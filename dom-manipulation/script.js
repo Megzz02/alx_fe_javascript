@@ -26,7 +26,7 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
       syncWithServer(newQuote);
       document.getElementById("newQuoteText").value = "";
       document.getElementById("newQuoteCategory").value = "";
-      alert("New quote added successfully!");
+      notifyUser("New quote added successfully!");
       populateCategories();
     } else {
       alert("Please enter both a quote and a category.");
@@ -70,7 +70,7 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
       quotes.push(...importedQuotes);
       saveQuotes();
       syncWithServer();
-      alert('Quotes imported successfully!');
+      notifyUser('Quotes imported successfully!');
       populateCategories();
     };
     fileReader.readAsText(event.target.files[0]);
@@ -114,7 +114,7 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
         await postQuoteToServer(newQuote);
       }
       await syncQuotes();
-      alert("Data synced with server successfully!");
+      notifyUser("Quotes synced with server!");
     } catch (error) {
       console.error("Error syncing with server: ", error);
     }
@@ -183,6 +183,7 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
     // Periodically check for new quotes from the server every 60 seconds
     setInterval(async () => {
       await syncQuotes();
+      notifyUser("Quotes synced with server!");
     }, 60000);
   });
   
