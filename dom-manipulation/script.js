@@ -108,20 +108,27 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
   }
   
   function syncWithServer() {
-    fetch(SERVER_URL)
+    fetchQuotesFromServer().then(serverQuotes => {
+      // Simulate server data taking precedence in case of conflict
+      const mergedQuotes = [...serverQuotes, ...quotes];
+      const uniqueMergedQuotes = Array.from(new Set(mergedQuotes.map(q => q.text)))
+        .map(text => mergedQuotes.find(q => q.text === text));
+      quotes.length = 0;
+      quotes.push(...uniqueMergedQuotes);
+      saveQuotes();
+      populateCategories();
+      alert("Data synced with server successfully!");
+    }).catch(error => console.error("Error syncing with server: ", error));
+  }
+  
+  function fetchQuotesFromServer() {
+    return fetch(SERVER_URL)
       .then(response => response.json())
-      .then(serverQuotes => {
-        // Simulate server data taking precedence in case of conflict
-        const mergedQuotes = [...serverQuotes, ...quotes];
-        const uniqueMergedQuotes = Array.from(new Set(mergedQuotes.map(q => q.text)))
-          .map(text => mergedQuotes.find(q => q.text === text));
-        quotes.length = 0;
-        quotes.push(...uniqueMergedQuotes);
-        saveQuotes();
-        populateCategories();
-        alert("Data synced with server successfully!");
-      })
-      .catch(error => console.error("Error syncing with server: ", error));
+      .then(data => data.map(item => ({ text: item.title, category: "Server" })))
+      .catch(error => {
+        console.error("Error fetching quotes from server: ", error);
+        return [];
+      });
   }
   
   function notifyUser(message) {
