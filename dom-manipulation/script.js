@@ -179,6 +179,11 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
       filterQuotes();
     }
     await syncQuotes();
+  
+    // Periodically check for new quotes from the server every 60 seconds
+    setInterval(async () => {
+      await syncQuotes();
+    }, 60000);
   });
   
   createAddQuoteForm();
