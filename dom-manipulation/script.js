@@ -4,6 +4,8 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
     { text: "Life is 10% what happens to us and 90% how we react to it.", category: "Life" }
   ];
   
+  const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
+  
   function showRandomQuote() {
     const randomIndex = Math.floor(Math.random() * quotes.length);
     const quoteDisplay = document.getElementById("quoteDisplay");
@@ -20,6 +22,7 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
     if (newQuoteText && newQuoteCategory) {
       quotes.push({ text: newQuoteText, category: newQuoteCategory });
       saveQuotes();
+      syncWithServer();
       document.getElementById("newQuoteText").value = "";
       document.getElementById("newQuoteCategory").value = "";
       alert("New quote added successfully!");
@@ -65,6 +68,7 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
       const importedQuotes = JSON.parse(event.target.result);
       quotes.push(...importedQuotes);
       saveQuotes();
+      syncWithServer();
       alert('Quotes imported successfully!');
       populateCategories();
     };
@@ -103,6 +107,33 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
     localStorage.setItem("selectedCategory", selectedCategory);
   }
   
+  function syncWithServer() {
+    fetch(SERVER_URL)
+      .then(response => response.json())
+      .then(serverQuotes => {
+        // Simulate server data taking precedence in case of conflict
+        const mergedQuotes = [...serverQuotes, ...quotes];
+        const uniqueMergedQuotes = Array.from(new Set(mergedQuotes.map(q => q.text)))
+          .map(text => mergedQuotes.find(q => q.text === text));
+        quotes.length = 0;
+        quotes.push(...uniqueMergedQuotes);
+        saveQuotes();
+        populateCategories();
+        alert("Data synced with server successfully!");
+      })
+      .catch(error => console.error("Error syncing with server: ", error));
+  }
+  
+  function notifyUser(message) {
+    const notification = document.createElement("div");
+    notification.className = "notification";
+    notification.innerText = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 3000);
+  }
+  
   window.addEventListener("load", () => {
     populateCategories();
     const savedCategory = localStorage.getItem("selectedCategory");
@@ -110,6 +141,7 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
       document.getElementById("categoryFilter").value = savedCategory;
       filterQuotes();
     }
+    syncWithServer();
   });
   
   createAddQuoteForm();
