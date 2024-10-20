@@ -23,6 +23,7 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
       document.getElementById("newQuoteText").value = "";
       document.getElementById("newQuoteCategory").value = "";
       alert("New quote added successfully!");
+      populateCategories();
     } else {
       alert("Please enter both a quote and a category.");
     }
@@ -36,6 +37,9 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
       <button onclick="addQuote()">Add Quote</button>
       <button onclick="exportToJsonFile()">Export Quotes</button>
       <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
+      <select id="categoryFilter" onchange="filterQuotes()">
+        <option value="all">All Categories</option>
+      </select>
     `;
     document.body.appendChild(formContainer);
   }
@@ -62,9 +66,51 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
       quotes.push(...importedQuotes);
       saveQuotes();
       alert('Quotes imported successfully!');
+      populateCategories();
     };
     fileReader.readAsText(event.target.files[0]);
   }
+  
+  function populateCategories() {
+    const categoryFilter = document.getElementById("categoryFilter");
+    const uniqueCategories = [...new Set(quotes.map(quote => quote.category))];
+  
+    categoryFilter.innerHTML = '<option value="all">All Categories</option>';
+    uniqueCategories.forEach(category => {
+      const option = document.createElement("option");
+      option.value = category;
+      option.textContent = category;
+      categoryFilter.appendChild(option);
+    });
+  }
+  
+  function filterQuotes() {
+    const selectedCategory = document.getElementById("categoryFilter").value;
+    const quoteDisplay = document.getElementById("quoteDisplay");
+    let filteredQuotes = quotes;
+  
+    if (selectedCategory !== "all") {
+      filteredQuotes = quotes.filter(quote => quote.category === selectedCategory);
+    }
+  
+    if (filteredQuotes.length > 0) {
+      const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
+      quoteDisplay.innerHTML = `<p>${filteredQuotes[randomIndex].text}</p><small>Category: ${filteredQuotes[randomIndex].category}</small>`;
+    } else {
+      quoteDisplay.innerHTML = `<p>No quotes available for this category.</p>`;
+    }
+  
+    localStorage.setItem("selectedCategory", selectedCategory);
+  }
+  
+  window.addEventListener("load", () => {
+    populateCategories();
+    const savedCategory = localStorage.getItem("selectedCategory");
+    if (savedCategory) {
+      document.getElementById("categoryFilter").value = savedCategory;
+      filterQuotes();
+    }
+  });
   
   createAddQuoteForm();
   
