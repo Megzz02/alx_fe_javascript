@@ -113,6 +113,15 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
       if (newQuote) {
         await postQuoteToServer(newQuote);
       }
+      await syncQuotes();
+      alert("Data synced with server successfully!");
+    } catch (error) {
+      console.error("Error syncing with server: ", error);
+    }
+  }
+  
+  async function syncQuotes() {
+    try {
       const serverQuotes = await fetchQuotesFromServer();
       // Simulate server data taking precedence in case of conflict
       const mergedQuotes = [...serverQuotes, ...quotes];
@@ -122,9 +131,8 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
       quotes.push(...uniqueMergedQuotes);
       saveQuotes();
       populateCategories();
-      alert("Data synced with server successfully!");
     } catch (error) {
-      console.error("Error syncing with server: ", error);
+      console.error("Error syncing quotes: ", error);
     }
   }
   
@@ -170,7 +178,7 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) || [
       document.getElementById("categoryFilter").value = savedCategory;
       filterQuotes();
     }
-    await syncWithServer();
+    await syncQuotes();
   });
   
   createAddQuoteForm();
